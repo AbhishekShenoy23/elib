@@ -53,7 +53,7 @@ const createUser = async (req: Request, res: Response, next: NextFunction) => {
       expiresIn: "1d",
     });
 
-    res.status(200).json({ accessToken: token });
+    res.status(201).json({ accessToken: token });
   } catch (error) {
     return next(
       createHttpError(500, "Error while signing User. Generating token")
@@ -61,4 +61,42 @@ const createUser = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-export { createUser };
+const loginUser = async (req: Request, res: Response, next: NextFunction) => {
+  const { email, password } = req.body;
+
+  //Check if user exists
+
+  let currentUser;
+  try {
+    currentUser = await userModel.findOne({ email });
+
+    if (!currentUser) {
+      return next(createHttpError(400, "User not found"));
+    }
+
+    //Check if password is correct
+    const isPasswordCorrect = await bcrypt.compare(
+      password,
+      currentUser.password
+    );
+
+    if (!isPasswordCorrect) {
+      return next(createHttpError(400, "Invalid Credentials"));
+    }
+  } catch (error) {
+    return next(createHttpError(500, { message: "Error while fetching user" }));
+  }
+
+  let token;
+  try {
+    //Token generation.
+    token = jwt.sign({ sub: currentUser._id }, config.secretKey as string, {
+      expiresIn: "1d",
+    });
+  } catch (error) {
+    return next(createHttpError(500, "Error while generating token"));
+  }
+
+  res.status(200).json({ accessToken: token });
+};
+export { createUser, loginUser };
