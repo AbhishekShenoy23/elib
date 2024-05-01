@@ -43,6 +43,12 @@ const createBooks = async (req: Request, res: Response, next: NextFunction) => {
     });
   } catch (error) {
     console.log("book-files", error);
+    return next(
+      createHttpError(500, {
+        message: "Error while uploading to cloud",
+        error: error,
+      })
+    );
   }
 
   res.status(201).json({
