@@ -210,7 +210,7 @@ const deleteBook = async (req: Request, res: Response, next: NextFunction) => {
 };
 
 const bookList = async (req: Request, res: Response, next: NextFunction) => {
-  const books = await bookModel.find({});
+  const books = await bookModel.find().populate("author", "name");
 
   res.json({ books });
 };
